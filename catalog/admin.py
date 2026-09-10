@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import Author, Genre, Book, BookInstance
+from .models import Author, Genre, Book, BookInstance, Language
 
 # consider adding save_as to more easily add instance that have similar values
 # you could do this for any or all of the below, e.g.
@@ -12,6 +12,7 @@ from .models import Author, Genre, Book, BookInstance
 # admin.site.register(Book)
 # admin.site.register(Author)
 admin.site.register(Genre)
+admin.site.register(Language)
 # admin.site.register(BookInstance)
 
 # Define the admin class
