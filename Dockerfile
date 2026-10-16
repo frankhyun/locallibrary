@@ -1,0 +1,1 @@
+CMD ["sh", "-c", "python manage.py migrate --noinput && exec daphne -b 0.0.0.0 -p 8000 locallibrary_config.asgi:application"]
