@@ -1,13 +1,13 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ author }} - Local Library</title>
-</head>
-<body>
-    <main>
+{% extends "base_generic.html" %}
+
+{% block content %}
         <h1>{{ author }}</h1>
+        {% if perms.catalog.change_author %}
+            <a href="{% url 'author-update' author.pk %}">Update author</a>
+        {% endif %}
+        {% if perms.catalog.delete_author %}
+            <a href="{% url 'author-delete' author.pk %}">Delete author</a>
+        {% endif %}
         <h2>Books</h2>
         <ul>
             {% for book in author.books.all %}
@@ -16,6 +16,4 @@
                 <li>This author has no books in the catalogue.</li>
             {% endfor %}
         </ul>
-    </main>
-</body>
-</html>
+{% endblock %}

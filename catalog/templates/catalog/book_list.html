@@ -1,13 +1,10 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Books - Local Library</title>
-</head>
-<body>
-    <main>
+{% extends "base_generic.html" %}
+
+{% block content %}
         <h1>Books</h1>
+        {% if perms.catalog.add_book %}
+            <a href="{% url 'book-create' %}">Create book</a>
+        {% endif %}
         <ul>
             {% for book in books %}
                 <li>
@@ -23,6 +20,4 @@
                 <li>No books are available.</li>
             {% endfor %}
         </ul>
-    </main>
-</body>
-</html>
+{% endblock %}

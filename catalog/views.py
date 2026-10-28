@@ -7,7 +7,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
 
-from .forms import RenewBookForm
+from .forms import AuthorForm, BookForm, RenewBookForm
 from .models import Author, Book, BookInstance, Genre
 
 
@@ -51,6 +51,11 @@ def author_detail(request, pk):
     return render(request, "catalog/author_detail.html", {"author": author})
 
 
+class AuthorListView(generic.ListView):
+    model = Author
+    template_name = "catalog/author_list.html"
+
+
 class LoanedBooksByUserListView(LoginRequiredMixin, generic.ListView):
     """List books currently on loan to the signed-in user."""
     model = BookInstance
@@ -82,8 +87,58 @@ class AllBorrowedBooksListView(PermissionRequiredMixin, generic.ListView):
         )
 
 
+class EditorCreateView(LoginRequiredMixin, PermissionRequiredMixin, generic.CreateView):
+    raise_exception = True
+
+
+class EditorDeleteView(LoginRequiredMixin, PermissionRequiredMixin, generic.DeleteView):
+    raise_exception = True
+
+
+class AuthorCreateView(EditorCreateView):
+    model = Author
+    form_class = AuthorForm
+    permission_required = "catalog.add_author"
+    template_name = "catalog/author_form.html"
+
+
+class AuthorUpdateView(EditorCreateView):
+    model = Author
+    form_class = AuthorForm
+    permission_required = "catalog.change_author"
+    template_name = "catalog/author_form.html"
+
+
+class AuthorDeleteView(EditorDeleteView):
+    model = Author
+    permission_required = "catalog.delete_author"
+    template_name = "catalog/author_confirm_delete.html"
+    success_url = "/catalog/authors/"
+
+
+class BookCreateView(EditorCreateView):
+    model = Book
+    form_class = BookForm
+    permission_required = "catalog.add_book"
+    template_name = "catalog/book_form.html"
+
+
+class BookUpdateView(EditorCreateView):
+    model = Book
+    form_class = BookForm
+    permission_required = "catalog.change_book"
+    template_name = "catalog/book_form.html"
+
+
+class BookDeleteView(EditorDeleteView):
+    model = Book
+    permission_required = "catalog.delete_book"
+    template_name = "catalog/book_confirm_delete.html"
+    success_url = "/catalog/books/"
+
+
 @login_required
-@permission_required("catalog.can_mark_returned")
+@permission_required("catalog.can_mark_returned", raise_exception=True)
 def renew_book_librarian(request, pk):
     """Renew a book loan for an authorized librarian."""
     book_instance = get_object_or_404(BookInstance, pk=pk)

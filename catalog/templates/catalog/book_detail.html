@@ -1,13 +1,13 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ book.title }} - Local Library</title>
-</head>
-<body>
-    <main>
+{% extends "base_generic.html" %}
+
+{% block content %}
         <h1>{{ book.title }}</h1>
+        {% if perms.catalog.change_book %}
+            <a href="{% url 'book-update' book.pk %}">Update book</a>
+        {% endif %}
+        {% if perms.catalog.delete_book %}
+            <a href="{% url 'book-delete' book.pk %}">Delete book</a>
+        {% endif %}
         <p>
             Authors:
             {% for author in book.authors.all %}
@@ -19,6 +19,4 @@
         <p>{{ book.summary }}</p>
         <p>ISBN: {{ book.isbn }}</p>
         <p>Genres: {{ book.genre.all|join:", " }}</p>
-    </main>
-</body>
-</html>
+{% endblock %}
