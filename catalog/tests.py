@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
+from .forms import RenewBookForm
 from .models import Author, Book, BookAuthor, BookInstance, Language
 
 class IndexViewTests(TestCase):
@@ -143,3 +144,60 @@ class IndexViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, borrowed.book.title)
         self.assertContains(response, librarian.username)
+
+    def test_renew_book_form_validates_date_range(self):
+        today = date.today()
+
+        self.assertTrue(RenewBookForm({"renewal_date": today}).is_valid())
+        self.assertTrue(
+            RenewBookForm(
+                {"renewal_date": today + timedelta(weeks=4)}
+            ).is_valid()
+        )
+        self.assertFalse(
+            RenewBookForm(
+                {"renewal_date": today - timedelta(days=1)}
+            ).is_valid()
+        )
+        self.assertFalse(
+            RenewBookForm(
+                {"renewal_date": today + timedelta(weeks=4, days=1)}
+            ).is_valid()
+        )
+
+    def test_renew_book_requires_permission_and_updates_due_date(self):
+        librarian = User.objects.create_user(
+            username="renewal-librarian", password="StrongPass123!"
+        )
+        permission = Permission.objects.get(
+            content_type__app_label="catalog",
+            codename="can_mark_returned",
+        )
+        librarian.user_permissions.add(permission)
+        book_instance = BookInstance.objects.create(
+            book=self.book,
+            imprint="Library",
+            status="o",
+            borrower=librarian,
+        )
+        renew_url = reverse(
+            "renew-book-librarian", kwargs={"pk": book_instance.pk}
+        )
+
+        self.assertRedirects(
+            self.client.get(renew_url),
+            f"{reverse('account_login')}?next={renew_url}",
+        )
+        self.client.force_login(librarian)
+        response = self.client.get(renew_url)
+        self.assertEqual(response.status_code, 200)
+
+        new_due_date = date.today() + timedelta(days=7)
+        response = self.client.post(
+            renew_url,
+            {"renewal_date": new_due_date.isoformat()},
+        )
+
+        self.assertRedirects(response, reverse("all-borrowed"))
+        book_instance.refresh_from_db()
+        self.assertEqual(book_instance.due_back, new_due_date)

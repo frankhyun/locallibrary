@@ -14,6 +14,7 @@
                     Unknown borrower
                 {% endif %}
                 ({{ bookinst.due_back }})
+                <a href="{% url 'renew-book-librarian' bookinst.pk %}">Renew</a>
             </li>
         {% endfor %}
         </ul>

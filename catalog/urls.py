@@ -27,4 +27,9 @@ urlpatterns = [
         views.AllBorrowedBooksListView.as_view(),
         name="all-borrowed",
     ),
+    path(
+        "book/<uuid:pk>/renew/",
+        views.renew_book_librarian,
+        name="renew-book-librarian",
+    ),
 ]

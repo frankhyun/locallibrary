@@ -1,0 +1,11 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <h1>Renew: {{ book_instance.book.title }}</h1>
+    <p>Borrowed by: {{ book_instance.borrower.get_username }}</p>
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Renew">
+    </form>
+{% endblock %}
