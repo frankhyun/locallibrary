@@ -26,6 +26,7 @@ from django.urls import include
 
 urlpatterns += [
     path('catalog/', include('catalog.urls')),
+    path('chat/', include('chat.urls')),
     path('accounts/', include('allauth.urls')),
 ]
 

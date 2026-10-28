@@ -1,0 +1,26 @@
+{% extends "base_generic.html" %}
+
+{% block title %}Chat Rooms | Local Library{% endblock %}
+
+{% block content %}
+    <h1>Chat Rooms</h1>
+    <label for="room-name-input">What chat room would you like to enter?</label>
+    <input id="room-name-input" type="text" size="60">
+    <input id="room-name-submit" type="button" value="Enter">
+
+    <script>
+        const roomInput = document.querySelector("#room-name-input");
+        roomInput.focus();
+        roomInput.addEventListener("keyup", (event) => {
+            if (event.key === "Enter") {
+                document.querySelector("#room-name-submit").click();
+            }
+        });
+        document.querySelector("#room-name-submit").addEventListener("click", () => {
+            const roomName = roomInput.value.trim();
+            if (roomName) {
+                window.location.pathname = `/chat/${roomName}/`;
+            }
+        });
+    </script>
+{% endblock %}

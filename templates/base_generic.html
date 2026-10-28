@@ -10,6 +10,7 @@
         <a href="{% url 'index' %}">Local Library</a>
         <a href="{% url 'book-list' %}">Books</a>
         <a href="{% url 'author-list' %}">Authors</a>
+        <a href="{% url 'chat-index' %}">Chat</a>
         {% if perms.catalog.add_author %}
             <a href="{% url 'author-create' %}">Create author</a>
         {% endif %}

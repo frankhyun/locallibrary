@@ -40,6 +40,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+    "chat",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -90,6 +92,18 @@ WSGI_APPLICATION = 'locallibrary_config.wsgi.application'
 
 DATABASES = {
     "default": env.db(default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")
+}
+DATABASES["default"]["TEST"] = {"NAME": BASE_DIR / "test_db.sqlite3"}
+
+# Channels
+ASGI_APPLICATION = "locallibrary_config.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [env("REDIS_URL", default="redis://127.0.0.1:6379")],
+        },
+    },
 }
 
 # django-allauth
