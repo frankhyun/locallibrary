@@ -1,22 +1,15 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Local Library</title>
-</head>
-<body>
-    <main>
-        <h1>Local Library</h1>
-        <p>Welcome to the local library catalogue.</p>
-        <ul>
-            <li>Books: {{ book_count }}</li>
-            <li>Copies: {{ instance_count }}</li>
-            <li>Available copies: {{ available_instance_count }}</li>
-            <li>Authors: {{ author_count }}</li>
-            <li>Genres: {{ genre_count }}</li>
-        </ul>
-        <p><a href="{% url 'book-list' %}">Browse all books</a></p>
-    </main>
-</body>
-</html>
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <h1>Local Library</h1>
+    <p>Welcome to the local library catalogue.</p>
+    <ul>
+        <li>Books: {{ book_count }}</li>
+        <li>Copies: {{ instance_count }}</li>
+        <li>Available copies: {{ available_instance_count }}</li>
+        <li>Authors: {{ author_count }}</li>
+        <li>Genres: {{ genre_count }}</li>
+    </ul>
+    <p><a href="{% url 'book-list' %}">Browse all books</a></p>
+    <p>You have visited this page {{ num_visits }} time{{ num_visits|pluralize }}.</p>
+{% endblock %}

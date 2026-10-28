@@ -1,8 +1,11 @@
-from django.test import TestCase
+from datetime import date, timedelta
 
+from allauth.account.models import EmailAddress
+from django.contrib.auth.models import User
+from django.test import TestCase
 from django.urls import reverse
 
-from .models import Author, Book, BookAuthor, Language
+from .models import Author, Book, BookAuthor, BookInstance, Language
 
 class IndexViewTests(TestCase):
     def test_index_page_loads(self):
@@ -37,3 +40,70 @@ class IndexViewTests(TestCase):
         response = self.client.get(self.author.get_absolute_url())
 
         self.assertContains(response, self.book.title)
+
+    def test_index_counts_visits_in_session(self):
+        first_response = self.client.get(reverse("index"))
+        second_response = self.client.get(reverse("index"))
+
+        self.assertContains(first_response, "visited this page 1 time")
+        self.assertContains(second_response, "visited this page 2 times")
+
+    def test_allauth_login_and_signup_pages_are_available(self):
+        self.assertEqual(self.client.get(reverse("account_login")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("account_signup")).status_code, 200)
+
+    def test_my_borrowed_requires_login(self):
+        response = self.client.get(reverse("my-borrowed"))
+
+        self.assertRedirects(
+            response,
+            f"{reverse('account_login')}?next={reverse('my-borrowed')}",
+        )
+
+    def test_my_borrowed_lists_only_current_users_loans(self):
+        user = User.objects.create_user(
+            username="reader", email="reader@example.com", password="StrongPass123!"
+        )
+        EmailAddress.objects.create(
+            user=user, email=user.email, primary=True, verified=True
+        )
+        self.client.force_login(user)
+        borrowed = BookInstance.objects.create(
+            book=self.book,
+            imprint="Library",
+            status="o",
+            borrower=user,
+        )
+        other_book = Book.objects.create(
+            title="Computing",
+            summary="Another book.",
+            isbn="1234567890124",
+            language=self.book.language,
+        )
+        other_instance = BookInstance.objects.create(
+            book=other_book,
+            imprint="Library",
+            status="o",
+        )
+
+        response = self.client.get(reverse("my-borrowed"))
+
+        self.assertContains(response, borrowed.book.title)
+        self.assertNotContains(response, other_instance.book.title)
+
+    def test_is_overdue(self):
+        overdue = BookInstance.objects.create(
+            book=self.book,
+            imprint="Library",
+            status="o",
+            due_back=date.today() - timedelta(days=1),
+        )
+        current = BookInstance.objects.create(
+            book=self.book,
+            imprint="Library",
+            status="o",
+            due_back=date.today() + timedelta(days=1),
+        )
+
+        self.assertTrue(overdue.is_overdue)
+        self.assertFalse(current.is_overdue)

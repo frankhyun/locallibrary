@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Local Library{% endblock %}</title>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'index' %}">Local Library</a>
+        <a href="{% url 'book-list' %}">Books</a>
+        {% if user.is_authenticated %}
+            <span>User: {{ user.get_username }}</span>
+            <a href="{% url 'my-borrowed' %}">My Borrowed</a>
+            <form id="logout-form" method="post" action="{% url 'account_logout' %}">
+                {% csrf_token %}
+                <button type="submit">Logout</button>
+            </form>
+        {% else %}
+            <a href="{% url 'account_login' %}?next={{ request.path }}">Login</a>
+            <a href="{% url 'account_signup' %}">Sign up</a>
+        {% endif %}
+    </nav>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
