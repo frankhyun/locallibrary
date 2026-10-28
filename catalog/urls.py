@@ -13,6 +13,8 @@ from . import views
 urlpatterns = [
     path("", views.index, name="index"),
     path("books/", views.book_list, name="book-list"),
+    path("books/", views.book_list, name="books"),
+    path("books/", views.book_list, name="book_list"),
     path("books/<int:pk>/", views.book_detail, name="book-detail"),
     path("authors/<int:pk>/", views.author_detail, name="author-detail"),
 ]

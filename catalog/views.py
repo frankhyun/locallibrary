@@ -18,7 +18,11 @@ def index(request):
 def book_list(request):
     """Display every book and its authors."""
     books = Book.objects.prefetch_related("authors")
-    return render(request, "catalog/book_list.html", {"books": books})
+    return render(
+        request,
+        "catalog/book_list.html",
+        {"books": books, "book_list": books},
+    )
 
 
 def book_detail(request, pk):
