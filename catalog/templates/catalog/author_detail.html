@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ author }} - Local Library</title>
+</head>
+<body>
+    <main>
+        <h1>{{ author }}</h1>
+        <h2>Books</h2>
+        <ul>
+            {% for book in author.books.all %}
+                <li><a href="{{ book.get_absolute_url }}">{{ book.title }}</a></li>
+            {% empty %}
+                <li>This author has no books in the catalogue.</li>
+            {% endfor %}
+        </ul>
+    </main>
+</body>
+</html>

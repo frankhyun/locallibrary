@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ book.title }} - Local Library</title>
+</head>
+<body>
+    <main>
+        <h1>{{ book.title }}</h1>
+        <p>
+            Authors:
+            {% for author in book.authors.all %}
+                <a href="{{ author.get_absolute_url }}">{{ author }}</a>{% if not forloop.last %}, {% endif %}
+            {% empty %}
+                Unknown author
+            {% endfor %}
+        </p>
+        <p>{{ book.summary }}</p>
+        <p>ISBN: {{ book.isbn }}</p>
+        <p>Genres: {{ book.genre.all|join:", " }}</p>
+    </main>
+</body>
+</html>
