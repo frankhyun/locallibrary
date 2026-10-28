@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from allauth.account.models import EmailAddress
+from django.contrib.auth.models import Permission
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -107,3 +108,38 @@ class IndexViewTests(TestCase):
 
         self.assertTrue(overdue.is_overdue)
         self.assertFalse(current.is_overdue)
+
+    def test_all_borrowed_requires_permission(self):
+        response = self.client.get(reverse("all-borrowed"))
+
+        self.assertRedirects(
+            response,
+            f"{reverse('account_login')}?next={reverse('all-borrowed')}",
+        )
+
+        user = User.objects.create_user(username="member", password="StrongPass123!")
+        self.client.force_login(user)
+        self.assertEqual(self.client.get(reverse("all-borrowed")).status_code, 403)
+
+    def test_librarian_sees_all_borrowed_books_and_borrowers(self):
+        librarian = User.objects.create_user(
+            username="librarian", password="StrongPass123!"
+        )
+        permission = Permission.objects.get(
+            content_type__app_label="catalog",
+            codename="can_mark_returned",
+        )
+        librarian.user_permissions.add(permission)
+        self.client.force_login(librarian)
+        borrowed = BookInstance.objects.create(
+            book=self.book,
+            imprint="Library",
+            status="o",
+            borrower=librarian,
+        )
+
+        response = self.client.get(reverse("all-borrowed"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, borrowed.book.title)
+        self.assertContains(response, librarian.username)
