@@ -10,6 +10,9 @@
         <a href="{% url 'index' %}">Local Library</a>
         <a href="{% url 'book-list' %}">Books</a>
         <a href="{% url 'author-list' %}">Authors</a>
+        {% if perms.catalog.add_author %}
+            <a href="{% url 'author-create' %}">Create author</a>
+        {% endif %}
         {% if user.is_authenticated %}
             <span>User: {{ user.get_username }}</span>
             <a href="{% url 'my-borrowed' %}">My Borrowed</a>

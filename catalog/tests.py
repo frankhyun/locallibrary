@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from .forms import RenewBookForm
-from .models import Author, Book, BookAuthor, BookInstance, Language
+from .models import Author, Book, BookAuthor, BookInstance, Genre, Language
 
 class IndexViewTests(TestCase):
     def test_index_page_loads(self):
@@ -42,6 +42,74 @@ class IndexViewTests(TestCase):
         response = self.client.get(self.author.get_absolute_url())
 
         self.assertContains(response, self.book.title)
+
+    def test_author_update_changes_author(self):
+        editor = User.objects.create_user(
+            username="author-editor", password="StrongPass123!"
+        )
+        editor.user_permissions.add(
+            Permission.objects.get(
+                content_type__app_label="catalog", codename="change_author"
+            )
+        )
+        self.client.force_login(editor)
+        response = self.client.post(
+            reverse("author-update", kwargs={"pk": self.author.pk}),
+            {
+                "first_name": self.author.first_name,
+                "last_name": "Updated",
+                "date_of_birth": "",
+                "date_of_death": "",
+            },
+        )
+
+        self.assertRedirects(response, self.author.get_absolute_url())
+        self.author.refresh_from_db()
+        self.assertEqual(self.author.last_name, "Updated")
+
+    def test_book_update_changes_book(self):
+        editor = User.objects.create_user(
+            username="book-editor", password="StrongPass123!"
+        )
+        editor.user_permissions.add(
+            Permission.objects.get(
+                content_type__app_label="catalog", codename="change_book"
+            )
+        )
+        self.client.force_login(editor)
+        genre = Genre.objects.create(name="Computing")
+        self.book.genre.add(genre)
+        response = self.client.post(
+            reverse("book-update", kwargs={"pk": self.book.pk}),
+            {
+                "title": "Updated title",
+                "summary": self.book.summary,
+                "isbn": self.book.isbn,
+                "language": self.book.language.pk,
+                "genre": [genre.pk],
+            },
+        )
+
+        self.assertRedirects(response, self.book.get_absolute_url())
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, "Updated title")
+
+    def test_author_list_name_and_create_link(self):
+        editor = User.objects.create_user(
+            username="create-editor", password="StrongPass123!"
+        )
+        editor.user_permissions.add(
+            Permission.objects.get(
+                content_type__app_label="catalog", codename="add_author"
+            )
+        )
+        self.client.force_login(editor)
+
+        self.assertEqual(self.client.get(reverse("authors")).status_code, 200)
+        self.assertContains(
+            self.client.get(reverse("index")),
+            reverse("author-create"),
+        )
 
     def test_index_counts_visits_in_session(self):
         first_response = self.client.get(reverse("index"))

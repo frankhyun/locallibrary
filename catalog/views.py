@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.views import generic
 
 from .forms import AuthorForm, BookForm, RenewBookForm
@@ -91,6 +91,10 @@ class EditorCreateView(LoginRequiredMixin, PermissionRequiredMixin, generic.Crea
     raise_exception = True
 
 
+class EditorUpdateView(LoginRequiredMixin, PermissionRequiredMixin, generic.UpdateView):
+    raise_exception = True
+
+
 class EditorDeleteView(LoginRequiredMixin, PermissionRequiredMixin, generic.DeleteView):
     raise_exception = True
 
@@ -102,7 +106,7 @@ class AuthorCreateView(EditorCreateView):
     template_name = "catalog/author_form.html"
 
 
-class AuthorUpdateView(EditorCreateView):
+class AuthorUpdateView(EditorUpdateView):
     model = Author
     form_class = AuthorForm
     permission_required = "catalog.change_author"
@@ -113,7 +117,7 @@ class AuthorDeleteView(EditorDeleteView):
     model = Author
     permission_required = "catalog.delete_author"
     template_name = "catalog/author_confirm_delete.html"
-    success_url = "/catalog/authors/"
+    success_url = reverse_lazy("authors")
 
 
 class BookCreateView(EditorCreateView):
@@ -123,7 +127,7 @@ class BookCreateView(EditorCreateView):
     template_name = "catalog/book_form.html"
 
 
-class BookUpdateView(EditorCreateView):
+class BookUpdateView(EditorUpdateView):
     model = Book
     form_class = BookForm
     permission_required = "catalog.change_book"
@@ -134,7 +138,7 @@ class BookDeleteView(EditorDeleteView):
     model = Book
     permission_required = "catalog.delete_book"
     template_name = "catalog/book_confirm_delete.html"
-    success_url = "/catalog/books/"
+    success_url = reverse_lazy("book-list")
 
 
 @login_required
