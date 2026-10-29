@@ -41,5 +41,12 @@ urlpatterns += [
 # Use static() to add URL mapping to serve static files during development (only)
 from django.conf import settings
 from django.conf.urls.static import static
+from taskflow.api import api as taskflow_api
+from taskflow.api_v2 import api_v2 as taskflow_api_v2
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += [
+    path("taskflow/api/", taskflow_api.urls),
+    path("taskflow/api/v2/", taskflow_api_v2.urls),
+]
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
