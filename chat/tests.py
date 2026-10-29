@@ -72,6 +72,7 @@ class ChatApiTests(TestCase):
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["content"], "hello")
+        self.assertEqual(response.json()["author"], self.user.id)
 
 
 @override_settings(

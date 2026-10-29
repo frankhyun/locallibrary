@@ -26,7 +26,7 @@ class MessageIn(ModelSchema):
 
 class MessageOut(ModelSchema):
     room: RoomOut
-    author: str | None = None
+    author: int | None = None
 
     class Meta:
         model = Message
@@ -34,7 +34,7 @@ class MessageOut(ModelSchema):
 
     @staticmethod
     def resolve_author(obj):
-        return obj.author.get_username() if obj.author else None
+        return obj.author_id
 
 
 class RoomFilter(FilterSchema):
