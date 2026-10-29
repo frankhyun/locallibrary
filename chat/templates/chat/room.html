@@ -4,7 +4,8 @@
 
 {% block content %}
     <h1>Chat Room: {{ room_name }}</h1>
-    <textarea id="chat-log" cols="100" rows="20" readonly></textarea><br>
+    <textarea id="chat-log" cols="100" rows="20" readonly>{% for message in room_messages %}{{ message.text }}
+{% endfor %}</textarea><br>
     <input id="chat-message-input" type="text" size="100">
     <input id="chat-message-submit" type="button" value="Send">
     {{ room_name|json_script:"room-name" }}
