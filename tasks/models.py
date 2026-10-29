@@ -55,6 +55,6 @@ class Comment(models.Model):
 class Attachment(models.Model):
     task = models.ForeignKey(Task, related_name="attachments", on_delete=models.CASCADE)
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    file = models.FileField(upload_to="taskflow/attachments/")
+    file = models.FileField(upload_to="attachments/%Y/%m/")
     original_name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)

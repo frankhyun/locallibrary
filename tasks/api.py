@@ -3,13 +3,16 @@ from typing import Any, Annotated, Literal
 
 from django.shortcuts import get_object_or_404
 from ninja import File, Form, FilterLookup, FilterSchema, PatchDict, Path, Query, Router, Status
-from ninja.errors import HttpError
+from ninja.errors import HttpError, ValidationError
 from ninja.pagination import CursorPagination, PageNumberPagination, paginate
 
 from projects.api import project_for
 from projects.models import Label, Membership
 from .models import ALLOWED_TRANSITIONS, Attachment, Comment, Priority, Task, TaskStatus
-from .schemas import AttachmentOut, CommentIn, CommentOut, StatusIn, TaskIn, TaskOut, TaskUpdate
+from .schemas import (
+    AttachmentFile, AttachmentIn, AttachmentOut, CommentIn, CommentOut, StatusIn,
+    TaskIn, TaskOut, TaskUpdate,
+)
 
 router = Router(tags=["tasks"])
 
@@ -75,10 +78,8 @@ def update_task(request, project_id: Path[int], task_id: int, payload: PatchDict
     project_for(request.auth, project_id)
     task = get_object_or_404(Task, id=task_id, project_id=project_id)
     for key, value in payload.items():
-        if value is None:
-            raise HttpError(422, f"{key} may not be null")
         if key == "assignee_id":
-            if not Membership.objects.filter(
+            if value is not None and not Membership.objects.filter(
                 project_id=project_id, user_id=value
             ).exists():
                 raise HttpError(400, "Assignee must be a project member")
@@ -125,8 +126,10 @@ def add_comment(request, project_id: Path[int], task_id: int, payload: CommentIn
 
 @router.put("/{task_id}/comments/{comment_id}", response=CommentOut)
 def update_comment(request, project_id: Path[int], task_id: int, comment_id: int, payload: CommentIn):
-    project_for(request.auth, project_id)
-    comment = get_object_or_404(Comment, id=comment_id, task_id=task_id, author=request.auth)
+    project = project_for(request.auth, project_id)
+    comment = get_object_or_404(Comment, id=comment_id, task_id=task_id)
+    if comment.author_id != request.auth.id:
+        raise HttpError(403, "Only the comment author may edit it")
     comment.body = payload.body
     comment.save(update_fields=["body"])
     return comment
@@ -153,16 +156,29 @@ def list_attachments(request, project_id: Path[int], task_id: int):
 @router.post("/{task_id}/attachments", response={201: AttachmentOut})
 def add_attachment(
     request, project_id: Path[int], task_id: int,
-    file: File[Any], description: Form[str] = "",
+    details: Form[AttachmentIn], file: File[Any],
 ):
     project_for(request.auth, project_id)
     task = get_object_or_404(Task, id=task_id, project_id=project_id)
     if file.size > 5 * 1024 * 1024:
-        raise HttpError(422, "Files can be at most 5 MB")
+        raise ValidationError([{
+            "type": "file_too_large",
+            "loc": ["file"],
+            "msg": "Files can be at most 5 MB",
+            "input": file.name,
+        }])
     if not file.name.lower().endswith((".pdf", ".png", ".jpg", ".jpeg", ".txt", ".md")):
-        raise HttpError(422, "Only PDF, PNG, JPEG and text files are allowed")
+        raise ValidationError([{
+            "type": "file_type",
+            "loc": ["file"],
+            "msg": "Only PDF, PNG, JPEG and text files are allowed",
+            "input": file.name,
+        }])
     attachment = Attachment.objects.create(
-        task=task, uploaded_by=request.auth, file=file, original_name=file.name
+        task=task,
+        uploaded_by=request.auth,
+        file=file,
+        original_name=details.name or file.name,
     )
     return Status(201, attachment)
 

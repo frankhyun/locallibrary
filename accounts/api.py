@@ -16,22 +16,24 @@ def signup(request, payload: SignupIn):
     if User.objects.filter(username=payload.username).exists():
         raise HttpError(409, "Username is already taken")
     try:
-        validate_password(payload.password)
+        validate_password(payload.password, user=User(username=payload.username))
     except ValidationError as error:
-        raise HttpError(400, error.messages) from error
+        raise HttpError(400, "; ".join(error.messages)) from error
     return Status(201, User.objects.create_user(payload.username, password=payload.password))
 
 
-@router.post("/token", response=TokenOut)
+@router.post("/token", response=TokenOut, deprecated=True)
 def token(request, payload: TokenIn):
+    """Use POST /taskflow/api/v2/auth/token for the OAuth2 response shape."""
     user = authenticate(username=payload.username, password=payload.password)
     if not user:
         raise HttpError(401, "Invalid credentials")
     return create_token_pair(user.id)
 
 
-@router.post("/refresh", response=TokenOut)
+@router.post("/refresh", response=TokenOut, deprecated=True)
 def refresh(request, payload: RefreshIn):
+    """Use POST /taskflow/api/v2/auth/refresh for the OAuth2 response shape."""
     claims = decode_token(payload.refresh, "refresh")
     if not claims:
         raise HttpError(401, "Invalid refresh token")
