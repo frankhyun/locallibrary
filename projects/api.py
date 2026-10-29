@@ -13,6 +13,17 @@ def visible_projects(user):
     return Project.objects.filter(memberships__user=user).distinct()
 
 
+def project_for(user, project_id, roles=None):
+    project = get_object_or_404(
+        Project.objects.prefetch_related("labels"),
+        memberships__user=user,
+        id=project_id,
+    )
+    if roles and not project.memberships.filter(user=user, role__in=roles).exists():
+        raise HttpError(403, "You do not have permission for this project")
+    return project
+
+
 @router.get("/", response=list[ProjectOut])
 def list_projects(request):
     return visible_projects(request.auth).prefetch_related("labels").annotate(
@@ -30,12 +41,22 @@ def create_project(request, payload: ProjectIn):
 
 @router.get("/{project_id}", response=ProjectOut)
 def get_project(request, project_id: int):
-    return get_object_or_404(visible_projects(request.auth), id=project_id)
+    return get_object_or_404(
+        visible_projects(request.auth).prefetch_related("labels").annotate(
+            task_count=Count("tasks", distinct=True),
+            unassigned_task_count=Count(
+                "tasks", filter=Q(tasks__assignee__isnull=True), distinct=True
+            ),
+        ),
+        id=project_id,
+    )
 
 
 @router.put("/{project_id}", response=ProjectOut)
 def update_project(request, project_id: int, payload: ProjectIn):
-    project = get_object_or_404(visible_projects(request.auth), id=project_id)
+    project = project_for(
+        request.auth, project_id, [Membership.Role.OWNER, Membership.Role.ADMIN]
+    )
     project.name, project.description = payload.name, payload.description
     project.save(update_fields=["name", "description"])
     return project
@@ -43,27 +64,35 @@ def update_project(request, project_id: int, payload: ProjectIn):
 
 @router.delete("/{project_id}", response={204: None})
 def delete_project(request, project_id: int):
-    get_object_or_404(visible_projects(request.auth), id=project_id).delete()
+    project_for(
+        request.auth, project_id, [Membership.Role.OWNER, Membership.Role.ADMIN]
+    ).delete()
     return Status(204, None)
 
 
 @router.post("/{project_id}/labels", response={201: LabelOut})
 def create_label(request, project_id: int, payload: LabelIn):
-    project = get_object_or_404(visible_projects(request.auth), id=project_id)
+    project = project_for(
+        request.auth, project_id, [Membership.Role.OWNER, Membership.Role.ADMIN]
+    )
     return Status(201, project.labels.create(name=payload.name, color=payload.color))
 
 
 @router.get("/{project_id}/members", response=list[MemberOut])
 def list_members(request, project_id: int):
-    project = get_object_or_404(visible_projects(request.auth), id=project_id)
+    project = project_for(request.auth, project_id)
     return project.memberships.select_related("user").all()
 
 
 @router.post("/{project_id}/members", response={201: MemberOut})
 def add_member(request, project_id: int, payload: MemberIn):
-    project = get_object_or_404(visible_projects(request.auth), id=project_id)
+    project = project_for(
+        request.auth, project_id, [Membership.Role.OWNER, Membership.Role.ADMIN]
+    )
     from django.contrib.auth.models import User
-    user = get_object_or_404(User, username=payload.username)
+    user = User.objects.filter(username=payload.username).first()
+    if user is None:
+        raise HttpError(400, "Unknown user")
     membership, created = Membership.objects.get_or_create(
         project=project, user=user, defaults={"role": payload.role}
     )

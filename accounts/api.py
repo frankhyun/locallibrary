@@ -18,7 +18,7 @@ def signup(request, payload: SignupIn):
     try:
         validate_password(payload.password)
     except ValidationError as error:
-        raise HttpError(422, error.messages) from error
+        raise HttpError(400, error.messages) from error
     return Status(201, User.objects.create_user(payload.username, password=payload.password))
 
 

@@ -2,6 +2,7 @@ from datetime import date
 
 from ninja import ModelSchema, PatchDict, Schema
 from pydantic import Field, field_validator, model_validator
+from pydantic_core import PydanticCustomError
 
 from accounts.schemas import UserOut
 from projects.schemas import LabelOut
@@ -11,7 +12,7 @@ from .models import Attachment, Comment, Priority, Task, TaskStatus
 class TaskIn(Schema):
     title: str
     description: str = ""
-    assignee_id: int | None = None
+    assignee_id: int | None = Field(None, description="ID of a project member to assign")
     label_ids: list[int] = []
     priority: Priority = Priority.MEDIUM
     due_date: date | None = None
@@ -19,8 +20,9 @@ class TaskIn(Schema):
     @field_validator("title")
     @classmethod
     def title_not_blank(cls, value):
-        if not value.strip():
-            raise ValueError("Title cannot be blank")
+        value = value.strip()
+        if not value:
+            raise PydanticCustomError("blank", "Title cannot be blank")
         return value
 
     @model_validator(mode="after")
@@ -31,8 +33,12 @@ class TaskIn(Schema):
 
 
 class TaskUpdate(Schema):
-    title: str | None = None
-    description: str | None = None
+    title: str = ""
+    description: str = ""
+    assignee_id: int = 0
+    label_ids: list[int] = []
+    priority: Priority = Priority.MEDIUM
+    due_date: date = date.min
 
 
 class TaskOut(ModelSchema):
@@ -49,14 +55,14 @@ class StatusIn(Schema):
 
 
 class CommentIn(Schema):
-    content: str
+    body: str
 
 
 class CommentOut(ModelSchema):
     author: UserOut
     class Meta:
         model = Comment
-        fields = ["id", "content", "created_at"]
+        fields = ["id", "body", "created_at"]
 
 
 class AttachmentOut(ModelSchema):

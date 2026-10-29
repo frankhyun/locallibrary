@@ -30,3 +30,15 @@ class RefreshIn(Schema):
 class TokenOut(Schema):
     access: str
     refresh: str
+
+
+class OAuthTokenOut(Schema):
+    access_token: str
+    refresh_token: str
+    token_type: Literal["bearer"]
+    expires_in: int
+
+
+class OAuthRefreshIn(Schema):
+    refresh_token: str
+from typing import Literal

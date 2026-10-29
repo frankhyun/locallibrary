@@ -6,6 +6,8 @@ import time
 
 from django.conf import settings
 
+ACCESS_TOKEN_LIFETIME = 15 * 60
+
 
 def _encode(data):
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
@@ -38,6 +40,6 @@ def decode_token(token, token_type):
 
 def create_token_pair(user_id):
     return {
-        "access": create_token(user_id, "access", 15 * 60),
+        "access": create_token(user_id, "access", ACCESS_TOKEN_LIFETIME),
         "refresh": create_token(user_id, "refresh", 7 * 24 * 60 * 60),
     }
