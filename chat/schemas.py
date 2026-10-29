@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Annotated
 
 from django.db.models import Q
@@ -10,36 +9,37 @@ from .models import Message, Room
 class RoomIn(ModelSchema):
     class Meta:
         model = Room
-        fields = ["name"]
+        fields = ["name", "topic"]
 
 
 class RoomOut(ModelSchema):
     class Meta:
         model = Room
-        fields = ["id", "name", "created_at"]
+        fields = ["id", "name", "topic", "created_at"]
 
 
 class MessageIn(ModelSchema):
     class Meta:
         model = Message
-        fields = ["text"]
+        fields = ["content"]
 
 
 class MessageOut(ModelSchema):
+    room: RoomOut
     author: str | None = None
 
     class Meta:
         model = Message
-        fields = ["id", "text", "created_at", "user"]
-        fields_optional = ["user"]
+        fields = ["id", "content", "created_at"]
 
     @staticmethod
     def resolve_author(obj):
-        return obj.user.get_username() if obj.user else None
+        return obj.author.get_username() if obj.author else None
 
 
 class RoomFilter(FilterSchema):
     search: Annotated[str | None, FilterLookup("name__icontains")] = None
+    topic: Annotated[str | None, FilterLookup("topic__icontains")] = None
     recent: bool | None = None
 
     def filter_recent(self, value: bool) -> Q:

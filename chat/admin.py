@@ -11,5 +11,5 @@ class RoomAdmin(admin.ModelAdmin):
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ["room", "user", "text", "created_at"]
+    list_display = ["room", "author", "content", "created_at"]
     list_filter = ["room"]

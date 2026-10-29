@@ -11,5 +11,5 @@ def room(request, room_name):
     return render(
         request,
         "chat/room.html",
-        {"room_name": room_name, "room_messages": room.messages.all()},
+        {"room_name": room_name, "chat_messages": room.messages.all()},
     )

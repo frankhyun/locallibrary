@@ -28,7 +28,10 @@ class ChatViewTests(TestCase):
         self.assertContains(response, "lobby")
 
 
-@override_settings(ALLOWED_HOSTS=["testserver", "localhost"])
+@override_settings(
+    ALLOWED_HOSTS=["testserver", "localhost"],
+    CHANNEL_LAYERS=IN_MEMORY_CHANNEL_LAYER,
+)
 class ChatApiTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
@@ -57,18 +60,18 @@ class ChatApiTests(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             "/api/rooms/",
-            data={"name": "lobby"},
+            data={"name": "lobby", "topic": "General"},
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
         room_id = response.json()["id"]
         response = self.client.post(
             f"/api/rooms/{room_id}/messages",
-            data={"text": "hello"},
+            data={"content": "hello"},
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()["text"], "hello")
+        self.assertEqual(response.json()["content"], "hello")
 
 
 @override_settings(

@@ -44,7 +44,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def save_message(self, text):
         message = Message.objects.create(
             room=self.room,
-            user=self.scope.get("user") if self.scope.get("user", None) and self.scope["user"].is_authenticated else None,
-            text=text,
+            author=self.scope.get("user") if self.scope.get("user", None) and self.scope["user"].is_authenticated else None,
+            content=text,
         )
-        return message.text
+        return message.content

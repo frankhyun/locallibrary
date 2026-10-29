@@ -41,6 +41,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 INSTALLED_APPS = [
     "daphne",
+    "ninja",
     "chat",
     'django.contrib.admin',
     'django.contrib.auth',

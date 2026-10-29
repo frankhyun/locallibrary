@@ -4,6 +4,7 @@ from django.db import models
 
 class Room(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    topic = models.CharField(max_length=200, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -15,18 +16,18 @@ class Room(models.Model):
 
 class Message(models.Model):
     room = models.ForeignKey(Room, related_name="messages", on_delete=models.CASCADE)
-    user = models.ForeignKey(
+    author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="chat_messages",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
-    text = models.TextField()
+    content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["created_at", "id"]
 
     def __str__(self):
-        return self.text
+        return self.content
